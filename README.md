@@ -1,2 +1,2 @@
 # itranslate_post
-iTranslatePpost
+iTranslatePost Pro

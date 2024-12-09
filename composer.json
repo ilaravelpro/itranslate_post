@@ -1,0 +1,36 @@
+{
+    "name": "ilaravel/itranslate_post",
+    "description": "iLaravel iTranslatePost",
+    "keywords": ["laravel","translate", "languages"],
+    "homepage": "https://ilaravel.iamir.net/packages/itranslate_post",
+    "license": "MIT",
+    "authors": [
+        {
+            "name" : "iamirnet",
+            "email" : "me@iamir.net",
+            "homepage": "https://iamir.net",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "classmap": [
+            "src"
+        ],
+        "psr-4": {
+            "iLaravel\\iTranslatePost\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "iLaravel\\iTranslatePost\\Providers\\AppServiceProvider",
+                "iLaravel\\iTranslatePost\\Providers\\RouteServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
