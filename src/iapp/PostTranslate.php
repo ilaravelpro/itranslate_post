@@ -14,6 +14,7 @@ class PostTranslate extends \iLaravel\Core\iApp\Model
 {
     use \iLaravel\iTranslate\iApp\Traits\Model;
     use \iLaravel\iPost\iApp\Traits\SaveTags;
+    use \iLaravel\iPost\iApp\Traits\SetSlug;
     public static $s_prefix = "IPRPT";
     public static $s_start = 21869999999;
     public static $s_end = 634229999999;
@@ -21,36 +22,52 @@ class PostTranslate extends \iLaravel\Core\iApp\Model
     public static $t_model_type = 'Post';
     public static $t_model_key = 'post_id';
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::iPostSlugBoot();
+        parent::creating(function (self $event) {
+            if ($event->hasTableColumn('type') && isset(static::getTModelClass()::$post_type))
+                $event->type = static::getTModelClass()::$post_type;
+        });
+        parent::deleting(function (self $event) {
+            if (method_exists($event, 'tags'))
+                $event->tags()->detach();
+        });
+    }
     public function creator()
     {
         return $this->belongsTo(imodal('User'));
     }
 
-    public function additionalUpdate($record = null, $additional = null, $request = null){
-        if (!$record) $record = $this;
-        $additional = $additional ? :$record->getAdditional();
-        $record->save_tags($record, $additional);
-        $record->save();
+    public function additionalUpdate($request = null, $additional = null, $parent = null)
+    {
+        $additional = $additional ?: $this->getAdditional();
+        if (method_exists(parent::class, 'additionalUpdate'))
+            parent::additionalUpdate($request, $additional, $parent);
+        $this->save_tags($additional);
+        $this->save();
     }
 
     public function rules(Request $request, $action, $arg1 = null)
     {
-        $arg1 = is_string($arg1) ? $this::findBySerial($arg1) : $arg1;
         $rules = [];
         $additionalRules = [
+            'image_file' => 'nullable|mimes:jpeg,jpg,png,gif|max:5120',
             'tags.*' => "nullable",
         ];
         switch ($action) {
             case 'store':
-                $rules['term_id'] = "required|exists:terms,id";
             case 'update':
                 $rules = array_merge($rules,$additionalRules, [
-                    'local' => "required|exists:translate_locals,code",
+                    'organization_id' => "required|exists:posts,id",
                     'title' => "required|string",
                     'slug' => ['nullable','slug'],
                     'content' => "nullable|string",
                     'summary' => "nullable|string",
-                    'status' => 'nullable|in:' . join(',', iconfig('status.posts', iconfig('status.global'))),
+                    'local' => "required|exists:translate_locals,code",
+                    'status' => 'nullable|in:' . join(',', iconfig('status.post_translates', iconfig('status.global'))),
+
                 ]);
                 /*$rules['slug'][] = Rule::unique('terms', 'slug')->where(function ($query) use ($request, $arg1) {
                     if ($arg1)
